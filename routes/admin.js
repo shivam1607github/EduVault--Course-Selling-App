@@ -2,7 +2,8 @@ const { Router } = require("express");
 const adminRouter = Router();
 const { adminModel } = require("../routes/db")
 const jwt = require("jsonwebtoken");
-const JWT_ADMIN_PASSWORD = "shivam123"
+const { JWT_ADMIN_PASSWORD } = require("../config");
+const { adminMiddleware } = require("../middleware/admin");
 //bcrypt - hasing password , zod - to validate the 
 
 adminRouter.post("/signup" , async function (req,res){
@@ -47,9 +48,23 @@ adminRouter.post ("/signin" , async function (req,res){
     }
 })
 
-adminRouter.post("/course" , function (req,res){
+adminRouter.post("/course" , adminMiddleware , async function (req,res){
+    const adminId = req.userId;
+    
+    const {title , description , imageUrl , price  } = req.body;
+
+    const course = await courseModel.Create({
+    title : title,
+    description : description,
+    imageUrl : imageUrl,
+    price : price,
+    creatorId :adminId,
+
+
+    })
     res.json({
-    message : "signup done!!"
+    message : "course created!",
+    courseId : course._Id
     })
 })
 

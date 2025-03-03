@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-mongoose.connect("mongodb+srv://shivampandeysbm1607:shivam1607@cluster0.e7iqg.mongodb.net/EduVault")
+//mongoose.connect("mongodb+srv://shivampandeysbm1607:shivam1607@cluster0.e7iqg.mongodb.net/EduVault");
 const Schema = mongoose.Schema;
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -19,17 +19,16 @@ const adminSchema  = new Schema({
     lastName : String
 });
 
-const purchaseSchema  = new Schema({
-    email : { type :String , unique : true },
-    password : String,
-    firstName : String ,
-    lastName : String,
+const courseSchema  = new Schema({
+    title :String,
+    description : String,
+    price : Number ,
     creatorId : ObjectId,
     imageUrl : String,
     
 });
 
-const courseSchema  = new Schema({
+const purchaseSchema = new Schema({
     userId: ObjectId,
     courseId: ObjectId
 
