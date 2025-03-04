@@ -4,7 +4,7 @@ const { adminModel } = require("../routes/db")
 const jwt = require("jsonwebtoken");
 const { JWT_ADMIN_PASSWORD } = require("../config");
 const { adminMiddleware } = require("../middleware/admin");
-//bcrypt - hasing password , zod - to validate the 
+//bcrypt - hasing password , zod - to validate the
 
 adminRouter.post("/signup" , async function (req,res){
     const {email , password , firstName , lastName } = req.body;   //todo :- adding a zod validation
@@ -49,7 +49,7 @@ adminRouter.post ("/signin" , async function (req,res){
 })
 
 adminRouter.post("/course" , adminMiddleware , async function (req,res){
-    const adminId = req.userId;
+    const adminId = req.adminId;
     
     const {title , description , imageUrl , price  } = req.body;
 

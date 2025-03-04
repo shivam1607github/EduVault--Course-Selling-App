@@ -5,7 +5,7 @@ function adminMiddleware ( req,res , next) {
     const token = req.body.token ;
     const decoded = jwt.verify(token , JWT_ADMIN_PASSWORD );      //verifying the token
     if(decoded){
-        req.user.Id = decoded.id;                 //here if it verifies the token with the given id ,then it will be next to continue
+        req.adminId = decoded.id;                 //here if it verifies the token with the given id ,then it will be next to continue
         next();
     }else{
         res.status(403).json({
