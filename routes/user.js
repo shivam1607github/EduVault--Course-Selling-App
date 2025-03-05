@@ -1,7 +1,8 @@
 
 const {Router} = require("express");
-const { userModel } = require("./db");
+const { userModel, purchaseModel } = require("./db");
 const jwt = require("jsonwebtoken");
+const { userMiddleware } = require("../middleware/user")
 //const JWT_USER_PASSWORD = "shivam1607"     // for the user.js i am giving a different password password as so on--
 const { JWT_USER_PASSWORD} = require("../config");
 const userRouter = Router();
@@ -49,9 +50,14 @@ userRouter.post("/signin" , async function (req,res){
     
 })
 
-userRouter.get("/purchases" , function (req,res){
+userRouter.get("/purchases" , userMiddleware , async function (req,res){  //in this route  you would expect the payment from the user to buy the course 
+    const userId = req.userId;
+    const purchases = await purchaseModel.find({
+        userId
+    })
+
     res.json({
-    message : "signup done!!"
+    purchases
     })
 })
 
