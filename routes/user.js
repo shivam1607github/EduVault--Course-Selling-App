@@ -2,8 +2,8 @@
 const {Router} = require("express");
 const { userModel } = require("./db");
 const jwt = require("jsonwebtoken");
-const JWT_USER_PASSWORD = "shivam1607"     // for the user.js i am giving a different password password as so on--
-
+//const JWT_USER_PASSWORD = "shivam1607"     // for the user.js i am giving a different password password as so on--
+const { JWT_USER_PASSWORD} = require("../config");
 const userRouter = Router();
 
 userRouter.post("/signup" , async function (req,res){

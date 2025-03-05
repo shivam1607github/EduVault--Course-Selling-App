@@ -1,4 +1,5 @@
-
+require('dotenv').config()         //dotenv code 
+console.log("MONGO_URL:", process.env.MONGO_URL);  // Debugging output         
 const express = require( "express");
 const mongoose = require( "mongoose");
 const { userRouter } = require ("./routes/user.js");     //express - routers 
@@ -12,7 +13,7 @@ app.use("/api/v1/admin" ,adminRouter);
 app.use("/api/v1/course", courseRouter);
 
 async function main(){    // this is the function we called so that backend should connect to the database first and then only its works 
-    await mongoose.connect("mongodb+srv://shivampandeysbm1607:shivam1607@cluster0.e7iqg.mongodb.net/EduVault");
+    await mongoose.connect(process.env.MONGO_URL);         //here,( process.env.MONGO_URL )  is the enviornment variable  to import the mongo connection url form the .env file
     app.listen(3000);
     console.log("listening to the port ");
 }
