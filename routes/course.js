@@ -1,10 +1,10 @@
 const { Router} = require("express");
 const courseRouter = Router();
 const { userMiddleware } = require("../middleware/user");
-const { courseModel } = require("./db");
+const { courseModel ,purchaseModel } = require("./db");
  
 
-    courseRouter.get("/purchases" , userMiddleware , async function (req,res){
+    courseRouter.get("/purchase" , userMiddleware , async function (req,res){
         const userId = req.userId;
         const courseId = req.body.courseId;
         await purchaseModel.create({

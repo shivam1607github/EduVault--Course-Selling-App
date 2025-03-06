@@ -1,9 +1,9 @@
 
 const {Router} = require("express");
-const { userModel, purchaseModel } = require("./db");
+const { userModel, purchaseModel, courseModel } = require("./db");
 const jwt = require("jsonwebtoken");
-const { userMiddleware } = require("../middleware/user")
-//const JWT_USER_PASSWORD = "shivam1607"     // for the user.js i am giving a different password password as so on--
+const { userMiddleware } = require("../middleware/user");
+
 const { JWT_USER_PASSWORD} = require("../config");
 const userRouter = Router();
 
@@ -54,10 +54,15 @@ userRouter.get("/purchases" , userMiddleware , async function (req,res){  //in t
     const userId = req.userId;
     const purchases = await purchaseModel.find({
         userId
+    });
+
+    const coursesData = await courseModel.find({
+        _id : { $in : purchases.map(x=>x.courseId) }
     })
 
     res.json({
-    purchases
+    purchases,
+    coursesData
     })
 })
 

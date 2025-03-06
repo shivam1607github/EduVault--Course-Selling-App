@@ -1,4 +1,5 @@
-const jwt = require("jsonwebtoken");
+/**
+ const jwt = require("jsonwebtoken");
 const { JWT_USER_PASSWORD } = require("../config");      //here we importing the password for the user from the config.js file to save the 
 
 function userMiddleware ( req,res , next) {
@@ -17,3 +18,33 @@ function userMiddleware ( req,res , next) {
 module.exports = {
     userMiddleware : userMiddleware              //exporting the usermiddleware 
 }
+
+ */
+
+
+
+
+
+
+const jwt = require("jsonwebtoken");
+const { JWT_USER_PASSWORD } = require("../config");
+
+function userMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Unauthorized: No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const decoded = jwt.verify(token, JWT_USER_PASSWORD);
+        req.userId = decoded.id; // Attach decoded admin ID to the request
+        next();
+    } catch (error) {
+        return res.status(403).json({ message: "Invalid or expired token" });
+    }
+}
+
+module.exports = { userMiddleware };
