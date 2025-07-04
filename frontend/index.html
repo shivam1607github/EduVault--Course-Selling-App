@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduVault Course App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="auth-section">
+        <div class="auth-logo">EduVault</div>
+        <div style="text-align:center; margin-bottom: 20px;">
+            <button id="auth-user-btn" class="auth-toggle active">User</button>
+            <button id="auth-admin-btn" class="auth-toggle">Admin</button>
+        </div>
+        <div style="text-align:center; margin-bottom: 20px;">
+            <button id="auth-login-btn" class="auth-action-toggle active">Login</button>
+            <button id="auth-register-btn" class="auth-action-toggle">Register</button>
+        </div>
+        <form id="user-login-form" class="auth-form">
+            <h2>User Login</h2>
+            <input type="text" id="user-login-email" placeholder="Email" required><br>
+            <input type="password" id="user-login-password" placeholder="Password" required><br>
+            <button type="submit">Login</button>
+        </form>
+        <form id="user-register-form" class="auth-form" style="display:none;">
+            <h2>User Register</h2>
+            <input type="text" id="user-register-email" placeholder="Email" required><br>
+            <input type="password" id="user-register-password" placeholder="Password" required><br>
+            <input type="text" id="user-register-firstName" placeholder="First Name" required><br>
+            <input type="text" id="user-register-lastName" placeholder="Last Name" required><br>
+            <button type="submit">Register</button>
+        </form>
+        <form id="admin-login-form" class="auth-form" style="display:none;">
+            <h2>Admin Login</h2>
+            <input type="text" id="admin-login-email" placeholder="Admin Email" required><br>
+            <input type="password" id="admin-login-password" placeholder="Password" required><br>
+            <button type="submit">Login</button>
+        </form>
+        <form id="admin-register-form" class="auth-form" style="display:none;">
+            <h2>Admin Register</h2>
+            <input type="text" id="admin-register-email" placeholder="Admin Email" required><br>
+            <input type="password" id="admin-register-password" placeholder="Password" required><br>
+            <input type="text" id="admin-register-firstName" placeholder="First Name" required><br>
+            <input type="text" id="admin-register-lastName" placeholder="Last Name" required><br>
+            <button type="submit">Register</button>
+        </form>
+        <div id="auth-message"></div>
+    </div>
+    <div id="app-section" style="display:none;">
+        <nav>
+            <div class="navbar-container">
+                <div class="logo">EduVault</div>
+                <ul>
+                    <li><a href="#" onclick="showSection('home')">Home</a></li>
+                    <li><a href="#" onclick="showSection('user')">User</a></li>
+                    <li><a href="#" onclick="showSection('admin')">Admin</a></li>
+                    <li><a href="#" onclick="showSection('courses')">Courses</a></li>
+                    <li><a href="#" id="logout-btn">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+        <main>
+            <section id="home">
+                <h1>Welcome to EduVault</h1>
+                <p>Your platform for selling and buying courses.</p>
+            </section>
+            <section id="user" style="display:none;">
+                <h2>User Area</h2>
+                <p>Welcome, user!</p>
+            </section>
+            <section id="admin" style="display:none;">
+                <h2>Admin Area</h2>
+                <div id="admin-message"></div>
+            </section>
+            <section id="courses" style="display:none;">
+                <h2>Courses</h2>
+                <div id="course-list">
+                    <p>Loading courses...</p>
+                </div>
+                <h3>Add a Course (Admin only)</h3>
+                <form id="add-course-form">
+                    <input type="text" id="course-title" placeholder="Course Title" required><br>
+                    <textarea id="course-description" placeholder="Course Description" required></textarea><br>
+                    <input type="text" id="course-image" placeholder="Image URL"><br>
+                    <input type="number" id="course-price" placeholder="Price" min="0" step="0.01"><br>
+                    <button type="submit">Add Course</button>
+                </form>
+                <div id="course-message"></div>
+            </section>
+        </main>
+    </div>
+    <script>
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('#app-section main > section');
+            sections.forEach(sec => sec.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+            if(sectionId === 'courses') fetchCourses();
+        }
+
+        // Helper: API base URL
+        const API = 'http://localhost:3000/api/v1';
+
+        // Show/hide app or auth section based on login
+        function showAppSection() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('app-section').style.display = 'block';
+            showSection('home');
+        }
+        function showAuthSection() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('app-section').style.display = 'none';
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('adminToken');
+        }
+        // On page load, check if logged in
+        if(localStorage.getItem('userToken') || localStorage.getItem('adminToken')) {
+            showAppSection();
+        } else {
+            showAuthSection();
+        }
+
+        // User Register
+        document.getElementById('user-register-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('user-register-email').value;
+            const password = document.getElementById('user-register-password').value;
+            const firstName = document.getElementById('user-register-firstName').value;
+            const lastName = document.getElementById('user-register-lastName').value;
+            const res = await fetch(`${API}/user/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, firstName, lastName })
+            });
+            const data = await res.json();
+            console.log('User Register Response:', data);
+            document.getElementById('auth-message').innerText = data.message || 'Registered!';
+            alert(data.message || 'Registered!');
+        };
+
+        // User Login
+        document.getElementById('user-login-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('user-login-email').value;
+            const password = document.getElementById('user-login-password').value;
+            const res = await fetch(`${API}/user/signin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            console.log('User Login Response:', data);
+            if(data.token) {
+                localStorage.setItem('userToken', data.token);
+                alert('User logged in!');
+                window.location.href = 'main.html';
+            } else {
+                document.getElementById('auth-message').innerText = data.message || 'Login failed';
+                alert(data.message || 'Login failed');
+            }
+        };
+
+        // Admin Register
+        document.getElementById('admin-register-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('admin-register-email').value;
+            const password = document.getElementById('admin-register-password').value;
+            const firstName = document.getElementById('admin-register-firstName').value;
+            const lastName = document.getElementById('admin-register-lastName').value;
+            const res = await fetch(`${API}/admin/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, firstName, lastName })
+            });
+            const data = await res.json();
+            console.log('Admin Register Response:', data);
+            document.getElementById('auth-message').innerText = data.message || 'Registered!';
+            alert(data.message || 'Registered!');
+        };
+
+        // Admin Login
+        document.getElementById('admin-login-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('admin-login-email').value;
+            const password = document.getElementById('admin-login-password').value;
+            const res = await fetch(`${API}/admin/signin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            console.log('Admin Login Response:', data);
+            if(data.token) {
+                localStorage.setItem('adminToken', data.token);
+                alert('Admin logged in!');
+                window.location.href = 'main.html';
+            } else {
+                document.getElementById('auth-message').innerText = data.message || 'Login failed';
+                alert(data.message || 'Login failed');
+            }
+        };
+
+        // Add Course (Admin only)
+        document.getElementById('add-course-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('adminToken');
+            if(!token) {
+                document.getElementById('course-message').innerText = 'Admin login required!';
+                return;
+            }
+            const title = document.getElementById('course-title').value;
+            const description = document.getElementById('course-description').value;
+            const imageUrl = document.getElementById('course-image').value;
+            const price = document.getElementById('course-price').value;
+            const res = await fetch(`${API}/admin/course`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title, description, imageUrl, price })
+            });
+            const data = await res.json();
+            document.getElementById('course-message').innerText = data.message || 'Course added!';
+            fetchCourses();
+        };
+
+        // Fetch and display courses
+        async function fetchCourses() {
+            const res = await fetch(`${API}/course/preview`);
+            const data = await res.json();
+            const list = document.getElementById('course-list');
+            if(data.courses && data.courses.length) {
+                list.innerHTML = data.courses.map(course => `
+                    <div class="course-item">
+                        <h4>${course.title}</h4>
+                        <p>${course.description}</p>
+                        <p>Price: $${course.price || 'N/A'}</p>
+                        <button onclick="purchaseCourse('${course._id}')">Purchase</button>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<p>No courses to show yet.</p>';
+            }
+        }
+
+        // Purchase course (User only)
+        window.purchaseCourse = async function(courseId) {
+            const token = localStorage.getItem('userToken');
+            if(!token) {
+                alert('User login required!');
+                return;
+            }
+            const res = await fetch(`${API}/course/purchase`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ courseId })
+            });
+            const data = await res.json();
+            alert(data.message || 'Purchase attempted!');
+        }
+
+        // Logout
+        document.getElementById('logout-btn').onclick = function() {
+            showAuthSection();
+        };
+
+        // Tab logic for concise auth UI
+        const authUserBtn = document.getElementById('auth-user-btn');
+        const authAdminBtn = document.getElementById('auth-admin-btn');
+        const authLoginBtn = document.getElementById('auth-login-btn');
+        const authRegisterBtn = document.getElementById('auth-register-btn');
+        const userLoginForm = document.getElementById('user-login-form');
+        const userRegisterForm = document.getElementById('user-register-form');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const adminRegisterForm = document.getElementById('admin-register-form');
+
+        let authMode = 'user'; // 'user' or 'admin'
+        let authAction = 'login'; // 'login' or 'register'
+
+        function updateAuthForms() {
+            // Remove all active classes
+            authUserBtn.classList.remove('active');
+            authAdminBtn.classList.remove('active');
+            authLoginBtn.classList.remove('active');
+            authRegisterBtn.classList.remove('active');
+            // Set active
+            if(authMode === 'user') authUserBtn.classList.add('active');
+            else authAdminBtn.classList.add('active');
+            if(authAction === 'login') authLoginBtn.classList.add('active');
+            else authRegisterBtn.classList.add('active');
+            // Hide all forms
+            userLoginForm.style.display = 'none';
+            userRegisterForm.style.display = 'none';
+            adminLoginForm.style.display = 'none';
+            adminRegisterForm.style.display = 'none';
+            // Show the correct form
+            if(authMode === 'user' && authAction === 'login') userLoginForm.style.display = '';
+            if(authMode === 'user' && authAction === 'register') userRegisterForm.style.display = '';
+            if(authMode === 'admin' && authAction === 'login') adminLoginForm.style.display = '';
+            if(authMode === 'admin' && authAction === 'register') adminRegisterForm.style.display = '';
+            document.getElementById('auth-message').innerText = '';
+        }
+        authUserBtn.onclick = () => { authMode = 'user'; updateAuthForms(); };
+        authAdminBtn.onclick = () => { authMode = 'admin'; updateAuthForms(); };
+        authLoginBtn.onclick = () => { authAction = 'login'; updateAuthForms(); };
+        authRegisterBtn.onclick = () => { authAction = 'register'; updateAuthForms(); };
+        updateAuthForms();
+    </script>
+</body>
+</html> 

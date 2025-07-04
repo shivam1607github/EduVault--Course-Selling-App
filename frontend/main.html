@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduVault Main</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-section">
+        <nav>
+            <div class="navbar-container">
+                <div class="logo">EduVault</div>
+                <ul>
+                    <li><a href="#" onclick="showSection('home')">Home</a></li>
+                    <li><a href="#" onclick="showSection('user')">User</a></li>
+                    <li><a href="#" onclick="showSection('admin')">Admin</a></li>
+                    <li><a href="#" onclick="showSection('courses')">Courses</a></li>
+                    <li><a href="#" id="logout-btn">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+        <main>
+            <section id="home">
+                <h1>Welcome to EduVault</h1>
+                <p>Your platform for selling and buying courses.</p>
+            </section>
+            <section id="user" style="display:none;">
+                <h2>User Area</h2>
+                <p>Welcome, user!</p>
+            </section>
+            <section id="admin" style="display:none;">
+                <h2>Admin Area</h2>
+                <div id="admin-message"></div>
+            </section>
+            <section id="courses" style="display:none;">
+                <h2>Courses</h2>
+                <div id="course-list">
+                    <p>Loading courses...</p>
+                </div>
+                <h3>Add a Course (Admin only)</h3>
+                <form id="add-course-form">
+                    <input type="text" id="course-title" placeholder="Course Title" required><br>
+                    <textarea id="course-description" placeholder="Course Description" required></textarea><br>
+                    <input type="text" id="course-image" placeholder="Image URL"><br>
+                    <input type="number" id="course-price" placeholder="Price" min="0" step="0.01"><br>
+                    <button type="submit">Add Course</button>
+                </form>
+                <div id="course-message"></div>
+            </section>
+        </main>
+    </div>
+    <script>
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('#app-section main > section');
+            sections.forEach(sec => sec.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+            if(sectionId === 'courses') fetchCourses();
+        }
+        showSection('home');
+        // Helper: API base URL
+        const API = 'http://localhost:3000/api/v1';
+        // Add Course (Admin only)
+        document.getElementById('add-course-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('adminToken');
+            if(!token) {
+                document.getElementById('course-message').innerText = 'Admin login required!';
+                return;
+            }
+            const title = document.getElementById('course-title').value;
+            const description = document.getElementById('course-description').value;
+            const imageUrl = document.getElementById('course-image').value;
+            const price = document.getElementById('course-price').value;
+            const res = await fetch(`${API}/admin/course`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title, description, imageUrl, price })
+            });
+            const data = await res.json();
+            document.getElementById('course-message').innerText = data.message || 'Course added!';
+            fetchCourses();
+        };
+        // Fetch and display courses
+        async function fetchCourses() {
+            const res = await fetch(`${API}/course/preview`);
+            const data = await res.json();
+            const list = document.getElementById('course-list');
+            if(data.courses && data.courses.length) {
+                list.innerHTML = data.courses.map(course => `
+                    <div class="course-item">
+                        <h4>${course.title}</h4>
+                        <p>${course.description}</p>
+                        <p>Price: $${course.price || 'N/A'}</p>
+                        <button onclick="purchaseCourse('${course._id}')">Purchase</button>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<p>No courses to show yet.</p>';
+            }
+        }
+        // Purchase course (User only)
+        window.purchaseCourse = async function(courseId) {
+            const token = localStorage.getItem('userToken');
+            if(!token) {
+                alert('User login required!');
+                return;
+            }
+            const res = await fetch(`${API}/course/purchase`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ courseId })
+            });
+            const data = await res.json();
+            alert(data.message || 'Purchase attempted!');
+        }
+        // Logout
+        document.getElementById('logout-btn').onclick = function() {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('adminToken');
+            window.location.href = 'index.html';
+        };
+    </script>
+</body>
+</html> 
